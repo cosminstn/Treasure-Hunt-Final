@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Treasure.h"
-#include <iostream>
+
+
 using namespace std;
 
 Treasure::Treasure()
@@ -11,8 +12,8 @@ void Treasure::moveTo(unsigned int newY, unsigned int newX, Map& map) {
 	if (newX >= 1 && newY >= 1 && newX <= map.getWidth() && newY <= map.getHeight())
 	{
 		map.clearLocation(this->getPosY(), this->getPosX());
-		this->setPosX(newX);
 		this->setPosY(newY);
+		this->setPosX(newX);
 		map.setItemAtLocation(newY, newX, 'T');
 	}
 }
@@ -25,13 +26,14 @@ string Treasure::getName() {
 	return this->name;
 }
 
-istream & operator>>(istream &in, Treasure &obj) {
+istream &operator>>(istream &in, Treasure &obj) {
+	in >> obj.name;
 	return in;
 }
 
-ostream & operator<<(ostream &out, Treasure& obj) {
-	//out << obj.name;
-	//not working for some strange reason
+ostream &operator<<(ostream &out, Treasure &obj) {
+	out << obj.getName() << '\n';
+	out << "X : " << obj.getPosX() << " Y : " << obj.getPosY();
 	return out;
 }
 

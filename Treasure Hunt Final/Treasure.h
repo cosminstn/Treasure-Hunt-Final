@@ -1,6 +1,8 @@
 #pragma once
 #include "MapEntity.h"
 #include "Map.h"
+#include <iostream>
+#include <string>
 
 class Treasure : public MapEntity
 {

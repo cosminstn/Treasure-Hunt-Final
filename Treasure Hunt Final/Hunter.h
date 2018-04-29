@@ -1,7 +1,7 @@
 #pragma once
 #include "MapEntity.h"
 #include "Map.h"
-
+#include <string>
 class Hunter : public MapEntity
 {
 public:

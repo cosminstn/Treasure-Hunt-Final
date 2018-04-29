@@ -1,6 +1,7 @@
 #pragma once
 #include "Hunter.h"
 #include "Treasure.h"
+using namespace std;
 class GameEngine
 {
 public:
@@ -9,9 +10,9 @@ public:
 	GameEngine(const char*);
 	~GameEngine();
 	//Methods
-	ostream& printMap(ostream& out);
-	ostream& printHunters(ostream& out);
-	ostream& printTreasures(ostream& out);
+	std::ostream& printMap(std::ostream& out);
+	std::ostream& printHunters(std::ostream& out);
+	std::ostream& printTreasures(std::ostream& out);
 	void play();
 	void printMap();
 private:
@@ -22,7 +23,9 @@ private:
 	void placeHunters();
 	void placeTreasures();
 	void moveHunters();
-	void moveHunter(Hunter &);
+	int moveHunter(Hunter &);
+	void printResults();
 	pair<int, int>generateRandomPosition(vector<pair<int, int> >&generatedPositions);
+
 };
 

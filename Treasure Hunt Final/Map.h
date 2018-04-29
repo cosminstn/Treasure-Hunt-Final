@@ -17,9 +17,10 @@ public:
 	bool isLocationVirgin(int, int);
 	void printMap();
 	vector<pair<int, int>> getSurroundingVirginBlocks(int, int);
+	int getNrOfTreasuresLeft();
 private:
-	char **map, initializer;
-	int width, height;
+	char **map, initializer, visitedPlace = '.', nullPlace = ' ';
+	int width, height, treasuresLeft;
 
 };
 

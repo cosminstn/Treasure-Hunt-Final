@@ -1,10 +1,9 @@
 #include "stdafx.h"
 #include "GameEngine.h"
 #include <fstream>
-#include <iostream>
 #include <time.h>
+#include <string>
 #include "Map.h"
-using namespace std;
 
 GameEngine::GameEngine(){
 	
@@ -18,14 +17,16 @@ GameEngine::GameEngine(const char* conf) {
 		//TODO : fix reading from file
 		//if the file has been opened successfully
 		//read the dimensions of the map
-		map = new Map(15, 30, '-');
-		for (int i = 0; i < 4; i++) {
-			hunters[i].setName("Hunter");
-		}
+		map = new Map(15, 15, '-');
+		hunters[0].setName("Vasco da Gama");
+		hunters[1].setName("James Augustus Grant");
+		hunters[2].setName("Hippalus");
+		hunters[3].setName("John Knight");
 		//read treasures
-		for (int i = 0; i < 3; i++) {
-			treasures[i].setName("Treasure");
-		}
+		treasures[0].setName("Gold");
+		treasures[1].setName("Silver");
+		treasures[2].setName("Booze");
+
 		placeHunters();
 		placeTreasures();
 		printMap();
@@ -43,6 +44,7 @@ void GameEngine::printMap() {
 void GameEngine::play() {
 	moveHunters();
 	printMap();
+	printResults();
 }
 
 void GameEngine::placeHunters() {
@@ -94,13 +96,17 @@ pair<int, int> GameEngine::generateRandomPosition(vector<pair<int, int>> &genera
 
 void GameEngine::moveHunters() {
 	//moves the hunters advancing one round in the game
-	for(int k = 0; k < 10; k++)	//move each of the max 10 times
+	int availableMoves = 1;
+	while (map->getNrOfTreasuresLeft() > 0) {
+		availableMoves = 0;
 		for (int i = 0; i < 4; i++)
 			if (hunters[i].getStatus()) //it means that the hunter is still searching for a treasure
-				moveHunter((Hunter&)hunters[i]);
+				availableMoves += moveHunter((Hunter&)hunters[i]);
+		printMap();
+	}
 }
 
-void GameEngine::moveHunter(Hunter &hunter) {
+int GameEngine::moveHunter(Hunter &hunter) {
 	//get the 
 	//get virgin locations surrounding the hunter
 	vector<pair<int, int>> validLocations = map->getSurroundingVirginBlocks(hunter.getPosY(), hunter.getPosX());
@@ -109,18 +115,24 @@ void GameEngine::moveHunter(Hunter &hunter) {
 		srand(time(NULL));
 		int dir = rand() % validLocations.size();
 		hunter.moveTo(validLocations[dir].first, validLocations[dir].second, (Map &)*map);
-		//check if there is a treasure on the newly found location
-		if (map->getItemAtLocation(hunter.getPosY(), hunter.getPosX()) == 'T')
-		{
-			//it means that this hunter has found a treasure
-			//set the indicator so that he's not searching anymore
-			hunter.setStatus(false);
-
-		}
 	}
 	else
-		hunter.setStatus(false);
-	printMap();
+		hunter.setStatus(false);	//stop looking if there are no left options for the hunter
+
+	//returns the number of available moves for the specified hunter
+	return validLocations.size();
+}
+
+//print each hunter with the treasure he found
+void GameEngine::printResults() {
+	//
+	if (map->getNrOfTreasuresLeft() == 0) {
+		cout << "\nAll treasures have been found : \n";
+		for (int i = 0; i < 4; i++)
+			for (int j = 0; j < 3; j++)
+				if (hunters[i].getPosY() == treasures[j].getPosY() && hunters[i].getPosX() == treasures[j].getPosX())
+					cout << hunters[i].getName() << " found " << treasures[j].getName() << '\n';
+	}
 }
 
 
@@ -134,7 +146,7 @@ ostream& GameEngine::printHunters(ostream& out) {
 
 ostream& GameEngine::printTreasures(ostream& out) {
 	out << "\nThese are the treasures : \n";
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 3; i++)
 		out << treasures[i] << '\n';
 	return out;
 }
