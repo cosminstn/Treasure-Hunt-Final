@@ -17,7 +17,7 @@ GameEngine::GameEngine(const char* conf) {
 		//TODO : fix reading from file
 		//if the file has been opened successfully
 		//read the dimensions of the map
-		map = new Map(15, 15, '-');
+		map = new Map(15, 45, '-');
 		hunters[0].setName("Vasco da Gama");
 		hunters[1].setName("James Augustus Grant");
 		hunters[2].setName("Hippalus");
@@ -97,7 +97,7 @@ pair<int, int> GameEngine::generateRandomPosition(vector<pair<int, int>> &genera
 void GameEngine::moveHunters() {
 	//moves the hunters advancing one round in the game
 	int availableMoves = 1;
-	while (map->getNrOfTreasuresLeft() > 0) {
+	while (map->getNrOfTreasuresLeft() > 0 && availableMoves > 0) {
 		availableMoves = 0;
 		for (int i = 0; i < 4; i++)
 			if (hunters[i].getStatus()) //it means that the hunter is still searching for a treasure
