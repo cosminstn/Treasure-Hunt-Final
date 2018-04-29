@@ -1,5 +1,7 @@
 #pragma once
 #include "MapEntity.h"
+#include "Map.h"
+
 class Treasure : public MapEntity
 {
 public:
@@ -9,10 +11,13 @@ public:
 	~Treasure();
 
 	//Methods
-	friend istream& operator>>(istream& in, Treasure& obj);
-	friend ostream& operator<<(ostream& out, Treasure& obj);
-	void moveTo(unsigned int, unsigned int);
+	friend istream & operator>>(istream & , Treasure &);
+	friend ostream & operator<<(ostream &, Treasure &);
+
+	void moveTo(unsigned int, unsigned int, Map &map);
+	void setName(string newName);
+	string getName();
 private:
-	char *name;
+	string name;
 };
 

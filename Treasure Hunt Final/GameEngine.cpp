@@ -2,29 +2,33 @@
 #include "GameEngine.h"
 #include <fstream>
 #include <iostream>
-GameEngine::GameEngine()
-{
+#include <time.h>
+#include "Map.h"
+using namespace std;
+
+GameEngine::GameEngine(){
+	
 }
 
-GameEngine::GameEngine(char* conf) {
-	ifstream gameConfig("GameConfig.init");
-	if (gameConfig.good()) {
+GameEngine::GameEngine(const char* conf) {
+	ifstream gameConfig;
+	gameConfig.open(conf, ios::in);
+	if (gameConfig.is_open()) {
+		//not solved yet!! this does not work on reading from file
+		//TODO : fix reading from file
 		//if the file has been opened successfully
 		//read the dimensions of the map
-		int w, h;
-		gameConfig >> w >> h;
-		cout << "W : " << w << " H : " << h;
-		//the map must be at least 15 x 15
-		if (this->mapWidth < 15)
-			this->mapWidth = 15;
-		if (this->mapHeight < 15)
-			this->mapHeight = 15;
-		//read the name of the hunters
+		map = new Map(15, 30, '-');
 		for (int i = 0; i < 4; i++) {
-			gameConfig >> hunters[i];
+			hunters[i].setName("Hunter");
 		}
-		this->initializeMap(this->mapWidth, this->mapHeight, '-');
+		//read treasures
+		for (int i = 0; i < 3; i++) {
+			treasures[i].setName("Treasure");
+		}
 		placeHunters();
+		placeTreasures();
+		printMap();
 	}
 	else {
 		cout << "\nErr : Could not open " << conf;
@@ -32,50 +36,108 @@ GameEngine::GameEngine(char* conf) {
 	gameConfig.close();
 }
 
-void GameEngine::initializeMap(int width, int height, char allAroundValue) {
-	//creates a width by height matrix filled with 'allAroundValue'
-	//height = nr of rows
-	//width = nr of cells
-	this->mapWidth = width;
-	this->mapHeight = height;
-	this->map = new char*[height + 1];
-	for (int i = 0; i <= height; i++) {
-		map[i] = new char[width + 1];
-	}
-	for (int i = 0; i <= height; i++)
-		for (int j = 0; j <= width; j++)
-			map[i][j] = allAroundValue;
-	this->placeHunters();
+void GameEngine::printMap() {
+	map->printMap();
+}
+
+void GameEngine::play() {
+	moveHunters();
+	printMap();
 }
 
 void GameEngine::placeHunters() {
 	//first hunter on line 1 column 1
-	hunters[0].moveTo(1, 1, this->map);
+	hunters[0].moveTo(1, 1, (Map&) *map);
+	hunters[0].setStatus(true);
 	//second hunter on line 1 column mapWidth
-	hunters[1].moveTo(1, this->mapWidth, this->map);
+	hunters[1].moveTo(1, map->getWidth(), (Map&) *map);
+	hunters[1].setStatus(true);
 	//third hunter on line mapHeight column mapWidth
-	hunters[2].moveTo(this->mapHeight, this->mapWidth, this->map);
+	hunters[2].moveTo(map->getHeight(), map->getWidth(), (Map&) *map);
+	hunters[2].setStatus(true);
 	//fourth hunter on line mapHeight column 1
-	hunters[3].moveTo(this->mapHeight, 1, this->map);
+	hunters[3].moveTo(map->getHeight(), 1, (Map&) *map);
+	hunters[3].setStatus(true);
+}
+
+void GameEngine::placeTreasures() {
+	
+	//all treasures must be places randomly
+	//initialize random seed
+	srand(time(NULL));
+	
+	vector<pair<int, int> >generatedPositions;
+	//push all hunters positions in the generated positions vector so no treasure is generated over a hunter
+	for (int i = 0; i < 4; i++) {
+		generatedPositions.push_back(make_pair(hunters[i].getPosX(), hunters[i].getPosY()));
+	}
+
+	//generate x and y for each treasure
+	for (int i = 0; i < 3; i++) {
+		pair<int, int> cPair = generateRandomPosition(generatedPositions);
+		treasures[i].moveTo(cPair.first, cPair.second, (Map&)* map);
+	}
+}
+
+pair<int, int> GameEngine::generateRandomPosition(vector<pair<int, int>> &generatedPositions) {
+	//call the function recursively until it finds a pair that hasn't already been generated
+	int x = rand() % map->getWidth() + 1;
+	int y = rand() % map->getHeight() + 1;
+	pair<int, int> cPair = make_pair(y, x);
+	for (int i = 0; i < generatedPositions.size(); i++) {
+		if (cPair == generatedPositions[i] || !map->isLocationVirgin(cPair.first, cPair.second))
+			return generateRandomPosition(generatedPositions);
+	}
+	generatedPositions.push_back(cPair);
+	return cPair;
+}
+
+void GameEngine::moveHunters() {
+	//moves the hunters advancing one round in the game
+	for(int k = 0; k < 10; k++)	//move each of the max 10 times
+		for (int i = 0; i < 4; i++)
+			if (hunters[i].getStatus()) //it means that the hunter is still searching for a treasure
+				moveHunter((Hunter&)hunters[i]);
+}
+
+void GameEngine::moveHunter(Hunter &hunter) {
+	//get the 
+	//get virgin locations surrounding the hunter
+	vector<pair<int, int>> validLocations = map->getSurroundingVirginBlocks(hunter.getPosY(), hunter.getPosX());
+	if (validLocations.size() > 0) {
+		//choose a random direction
+		srand(time(NULL));
+		int dir = rand() % validLocations.size();
+		hunter.moveTo(validLocations[dir].first, validLocations[dir].second, (Map &)*map);
+		//check if there is a treasure on the newly found location
+		if (map->getItemAtLocation(hunter.getPosY(), hunter.getPosX()) == 'T')
+		{
+			//it means that this hunter has found a treasure
+			//set the indicator so that he's not searching anymore
+			hunter.setStatus(false);
+
+		}
+	}
+	else
+		hunter.setStatus(false);
+	printMap();
 }
 
 
-ostream& GameEngine::printMap(ostream& out) {
-	out << "\nMap right now : \n";
-	for (int i = 1; i <= this->mapHeight; i++) {
-		for (int j = 1; j <= this->mapWidth; j++)
-			out << map[i][j];
-		out << '\n';
-	}
+ostream& GameEngine::printHunters(ostream& out) {
+	out << "\nThese are the hunters : \n";
+	for (int i = 0; i < 4; i++)
+		out << hunters[i] << '\n';
 	return out;
 }
 
-void GameEngine::printHunters() {
+
+ostream& GameEngine::printTreasures(ostream& out) {
+	out << "\nThese are the treasures : \n";
 	for (int i = 0; i < 4; i++)
-		cout << hunters[i] << '\n';
+		out << treasures[i] << '\n';
+	return out;
 }
-
-
 
 GameEngine::~GameEngine()
 {

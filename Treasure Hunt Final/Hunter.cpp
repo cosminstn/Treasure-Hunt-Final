@@ -6,15 +6,13 @@ Hunter::Hunter()
 {
 }
 
-Hunter::Hunter(char* newName, unsigned int newPosX, unsigned int newPosY) : MapEntity(newPosX, newPosY) {
-
+Hunter::Hunter(string newName, unsigned int newPosX, unsigned int newPosY) : MapEntity(newPosX, newPosY) {
+	this->name = newName;
+	this->isSearching = true;
 }
 
 istream& operator>>(istream& in, Hunter& obj) {
-	char *tName = new char[500];
-	in.getline(tName, 499);
-	obj.name = new char(sizeof(tName));
-	strcpy_s(obj.name, sizeof(obj.name), tName);
+	in >> obj.name;
 	return in;
 }
 
@@ -25,20 +23,29 @@ ostream& operator<<(ostream& out, Hunter &obj) {
 }
 
 
-void Hunter::moveTo(unsigned int newX, unsigned int newY, char **map) {
-	map[this->getPosX()][this->getPosY()] = ' ';
-	map[newX][newY] = 'H';
-	this->setPosX(newX);
-	this->setPosY(newY);
-	
+void Hunter::moveTo(unsigned int newY, unsigned int newX, Map &map) {
+	if(newX >= 1 && newY >= 1 && newX <= map.getWidth() && newY <= map.getHeight())
+	{
+		map.clearLocation(this->getPosY(), this->getPosX());
+		this->setPosX(newX);
+		this->setPosY(newY);
+		map.setItemAtLocation(newY, newX, 'H');
+	}
 }
 
-void Hunter::setName(char* newName) {
-	this->name = new char(sizeof(newName));
-	strcpy_s(this->name, sizeof(this->name), newName);
+void Hunter::setName(string newName) {
+	this->name = newName;
 }
 
-char* Hunter::getName() {
+void Hunter::setStatus(bool status) {
+	this->isSearching = status;
+}
+
+bool Hunter::getStatus() {
+	return this->isSearching;
+}
+
+string Hunter::getName() {
 	return this->name;
 }
 
